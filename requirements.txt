@@ -1,0 +1,15 @@
+langchain
+langgraph
+langchain-core
+langchain-community
+langchain-groq
+langchain-mistralai
+tavily-python
+beautifulsoup4
+readability-lxml
+lxml
+requests
+python-dotenv
+pydantic
+rich
+httpx

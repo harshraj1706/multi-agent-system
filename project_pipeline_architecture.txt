@@ -1,0 +1,52 @@
+multi_agent_system/
+│
+├── agents/
+│   ├── research_agent.py
+│   ├── scraper_agent.py
+│   ├── writer_agent.py
+│
+├── tools/
+│   ├── tavily_tool.py
+│   ├── scrape_tool.py
+│
+├── prompts/
+│   ├── research_prompt.py
+│   ├── writer_prompt.py
+│
+├── graph/
+│   ├── workflow.py
+│
+├── chains/
+│   ├── report_chain.py
+│
+├── config/
+│   ├── settings.py
+│
+├── main.py
+├── .env
+├── requirements.txt
+└── README.md
+
+ARCHITECTURE 
+
+                User Query
+                     │
+                     ▼
+             Supervisor Agent
+               (Groq Llama)
+                     │
+        ┌────────────┴────────────┐
+        ▼                         ▼
+
+ Research Agent          Scraper Agent
+   (Tavily)            (BeautifulSoup)
+
+        └────────────┬────────────┘
+                     ▼
+
+             Writer Agent
+          (Mistral Large)
+
+                     ▼
+
+               Final Report
