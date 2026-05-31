@@ -1,11 +1,12 @@
 import os
+from functools import lru_cache
 
 from dotenv import load_dotenv
 from langchain.agents import create_agent
 from langchain_core.messages import BaseMessage
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_mistralai import ChatMistralAI
+from langchain_groq import ChatGroq
 
 from tool import scrape_url, web_search
 
@@ -15,19 +16,33 @@ load_dotenv()
 def _require_env(name: str) -> str:
     value = os.getenv(name)
     if not value:
-        raise RuntimeError(
-            f"{name} is not set. Add it to your .env file before running the pipeline."
-        )
+        raise RuntimeError(f"{name} is not set. Add it to your .env file.")
     return value
 
 
-_require_env("MISTRAL_API_KEY")
+@lru_cache(maxsize=1)
+def _get_llm() -> ChatGroq:
+    """Build the Groq chat model only when a pipeline call needs it."""
+    return ChatGroq(
+        model=os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
+        api_key=_require_env("GROQ_API_KEY"),
+        temperature=float(os.getenv("GROQ_TEMPERATURE", "0.2")),
+        max_tokens=int(os.getenv("GROQ_MAX_TOKENS", "1800")),
+    )
 
-llm = ChatMistralAI(
-    model_name=os.getenv("MISTRAL_MODEL", "mistral-large-latest"),
-    temperature=float(os.getenv("MISTRAL_TEMPERATURE", "0.2")),
-    max_tokens=int(os.getenv("MISTRAL_MAX_TOKENS", "1800")),
-)
+
+class LazyChain:
+    """Small wrapper that preserves `.invoke()` while delaying API setup."""
+
+    def __init__(self, prompt: ChatPromptTemplate):
+        self.prompt = prompt
+
+    @lru_cache(maxsize=1)
+    def _chain(self):
+        return self.prompt | _get_llm() | StrOutputParser()
+
+    def invoke(self, inputs: dict) -> str:
+        return self._chain().invoke(inputs)
 
 
 def _message_text(message: BaseMessage | object) -> str:
@@ -79,7 +94,7 @@ Call the web_search tool once, then summarize the best evidence.
 
 def search_agent():
     agent = create_agent(
-        model=llm,
+        model=_get_llm(),
         tools=[web_search],
         system_prompt=search_system_prompt,
     )
@@ -101,7 +116,7 @@ Summarize the key information you extract.
 
 def reader_agent():
     agent = create_agent(
-        model=llm,
+        model=_get_llm(),
         tools=[scrape_url],
         system_prompt=reader_system_prompt,
     )
@@ -181,7 +196,7 @@ Generate a complete research report.
     ]
 )
 
-writer_chain = writer_prompt | llm | StrOutputParser()
+writer_chain = LazyChain(writer_prompt)
 
 
 review_prompt = ChatPromptTemplate.from_messages(
@@ -260,4 +275,4 @@ Evaluate this report and provide a detailed review.
     ]
 )
 
-review_chain = review_prompt | llm | StrOutputParser()
+review_chain = LazyChain(review_prompt)

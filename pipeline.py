@@ -1,5 +1,19 @@
 import json
+import os
+
 from agent import review_chain, search_agent, writer_chain
+
+
+MAX_RESEARCH_CONTEXT_CHARS = int(os.getenv("MAX_RESEARCH_CONTEXT_CHARS", "16000"))
+
+
+def _limit_text(text: str, max_chars: int = MAX_RESEARCH_CONTEXT_CHARS) -> str:
+    """Keep context bounded without removing the strongest early source material."""
+    if len(text) <= max_chars:
+        return text
+    trimmed = text[:max_chars].rsplit("\n", 1)[0]
+    return f"{trimmed}\n\n[Context trimmed to reduce token usage.]"
+
 
 def run_research_pipeline_stream(topic: str):
     topic = topic.strip()
@@ -30,8 +44,8 @@ def run_research_pipeline_stream(topic: str):
     yield json.dumps({"type": "status", "agent": "scraper", "state": "Running"})
     yield json.dumps({"type": "log", "message": "[scraper] Preparing scraped content from search results..."})
 
-    # web_search already includes extracted article content. Reusing it here
-    # avoids an extra LLM call and prevents unnecessary rate-limit failures.
+    # web_search already includes extracted article content and the research
+    # agent has summarized it, so avoid a second scraper/model pass.
     state["scraped_content"] = state["search_results"]
 
     # Update Metrics (Sending a static update to trigger the UI counters)
@@ -44,9 +58,8 @@ def run_research_pipeline_stream(topic: str):
     yield json.dumps({"type": "log", "message": "[supervisor] Handing synthesis to writer agent..."})
     yield json.dumps({"type": "status", "agent": "writer", "state": "Running"})
 
-    research_combined = (
-        f"SEARCH RESULTS:\n{state['search_results']}\n\n"
-        f"DETAILED SCRAPED CONTENT:\n{state['scraped_content']}"
+    research_combined = _limit_text(
+        f"SEARCH SUMMARY AND SOURCE EVIDENCE:\n{state['search_results']}"
     )
     
     state["report"] = writer_chain.invoke(

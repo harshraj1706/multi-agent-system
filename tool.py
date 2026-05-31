@@ -10,6 +10,9 @@ from tavily import TavilyClient
 
 load_dotenv()
 
+MAX_SCRAPED_CHARS = int(os.getenv("MAX_SCRAPED_CHARS", "3500"))
+
+
 def _require_env(name: str) -> str:
     value = os.getenv(name)
     if not value:
@@ -55,7 +58,7 @@ def extract_main_content(url: str) -> str:
 
         if not text:
             return "Could not scrape page: no readable article text found."
-        return text[:5000]
+        return text[:MAX_SCRAPED_CHARS]
 
     except requests.RequestException as exc:
         return f"Could not scrape page: request failed ({exc})."
@@ -68,7 +71,7 @@ def web_search(query: str) -> str:
     """
     Search the web using Tavily, then scrape the top results.
 
-    Returns structured title, URL, snippet, and extracted page content.
+    Returns compact title, URL, snippet, and extracted page content.
     """
     if not query:
         return "Search query is empty."
@@ -93,23 +96,11 @@ def web_search(query: str) -> str:
         scraped_content = extract_main_content(url)
 
         final_output.append(
-            f"""
-=========================
-RESULT {idx}
-=========================
-
-TITLE:
-{title}
-
-URL:
-{url}
-
-TAVILY SNIPPET:
-{snippet}
-
-FULL ARTICLE CONTENT:
-{scraped_content}
-"""
+            f"RESULT {idx}\n"
+            f"TITLE: {title}\n"
+            f"URL: {url}\n"
+            f"SNIPPET: {snippet}\n"
+            f"CONTENT:\n{scraped_content}"
         )
 
     return "\n".join(final_output)

@@ -1,3 +1,19 @@
 .venv\Scripts\activate
 python api.py 
 streamlit run app.py
+
+
+for the new commit follow code
+git status
+git add .
+git commit -m "feat: integrated FastAPI backend with real-time Streamlit UI for agent execution"
+git push
+
+limitation
+
+GROQ_API_KEY=your_groq_key
+GROQ_MODEL=llama-3.3-70b-versatile
+GROQ_TEMPERATURE=0.2
+GROQ_MAX_TOKENS=1800
+MAX_SCRAPED_CHARS=3500
+MAX_RESEARCH_CONTEXT_CHARS=16000

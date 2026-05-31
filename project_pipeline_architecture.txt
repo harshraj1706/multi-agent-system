@@ -45,7 +45,7 @@ ARCHITECTURE
                      ▼
 
              Writer Agent
-          (Mistral Large)
+          (Groq Llama)
 
                      ▼
 
