@@ -81,6 +81,21 @@ class AgentRunner:
         return {"output": output, "messages": messages}
 
 
+class DirectSearchRunner:
+    """Run the search tool once without a LangGraph agent loop."""
+
+    def __init__(self, search_tool):
+        self.search_tool = search_tool
+
+    def invoke(self, inputs: dict) -> dict:
+        user_input = inputs.get("input")
+        if not user_input:
+            raise ValueError("DirectSearchRunner.invoke expects an 'input' value.")
+
+        output = self.search_tool.invoke({"query": user_input})
+        return {"output": str(output), "messages": []}
+
+
 search_system_prompt = """
 You are an expert Research Agent.
 
@@ -93,12 +108,7 @@ Call the web_search tool once, then summarize the best evidence.
 
 
 def search_agent():
-    agent = create_agent(
-        model=_get_llm(),
-        tools=[web_search],
-        system_prompt=search_system_prompt,
-    )
-    return AgentRunner(agent, recursion_limit=5)
+    return DirectSearchRunner(web_search)
 
 
 reader_system_prompt = """
