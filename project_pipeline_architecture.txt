@@ -1,52 +1,45 @@
+CogniSynth: Autonomous Research Platform
+=========================================
+
+REPOSITORY LAYOUT:
+-----------------
 multi_agent_system/
 │
-├── agents/
-│   ├── research_agent.py
-│   ├── scraper_agent.py
-│   ├── writer_agent.py
-│
-├── tools/
-│   ├── tavily_tool.py
-│   ├── scrape_tool.py
-│
-├── prompts/
-│   ├── research_prompt.py
-│   ├── writer_prompt.py
-│
-├── graph/
-│   ├── workflow.py
-│
-├── chains/
-│   ├── report_chain.py
-│
-├── config/
-│   ├── settings.py
-│
-├── main.py
-├── .env
-├── requirements.txt
-└── README.md
+├── agent.py              # GeminiChatModel adapter, Agent definitions, Writer & Reviewer chains
+├── pipeline.py           # Multi-agent streaming pipeline (Supervisor coordination & event dispatch)
+├── tool.py               # Web search (Tavily) & Content extractor (Readability + BeautifulSoup)
+├── api.py                # FastAPI backend with Server-Sent Events (SSE) streaming (/api/research)
+├── app.py                # Streamlit premium real-time intelligence dashboard
+├── test.py               # Automated smoke test suite
+├── requirements.txt      # Python dependencies
+├── .env                  # Environment variables & API credentials
+├── running.txt           # Deployment instructions & configuration reference
+└── README.md             # Platform documentation & architectural specifications
 
-ARCHITECTURE 
 
-                User Query
-                     │
-                     ▼
-             Supervisor Agent
-               (Groq Llama)
-                     │
-        ┌────────────┴────────────┐
-        ▼                         ▼
+EXECUTION ARCHITECTURE:
+----------------------
 
- Research Agent          Scraper Agent
-   (Tavily)            (BeautifulSoup)
-
-        └────────────┬────────────┘
-                     ▼
-
-             Writer Agent
-          (Groq Llama)
-
-                     ▼
-
-               Final Report
+                         User Research Topic
+                                  │
+                                  ▼
+                         Supervisor Agent
+                    (Task Orchestration & State)
+                                  │
+                   ┌──────────────┴──────────────┐
+                   ▼                             ▼
+            Research Agent                 Scraper Agent
+             (Tavily API)           (Readability + BeautifulSoup)
+                   │                             │
+                   └──────────────┬──────────────┘
+                                  ▼
+                            Writer Agent
+                   (Gemini 3.8 Flash / 3.6 Fallback)
+                                  │
+                                  ▼
+                            Reviewer Agent
+                   (Gemini 3.8 Flash / 3.6 Fallback)
+                                  │
+                                  ▼
+             Final Report + Quality Assurance Evaluation
+                    (Real-Time SSE Streaming to UI)

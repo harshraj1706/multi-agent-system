@@ -10,7 +10,7 @@ from tavily import TavilyClient
 
 load_dotenv()
 
-MAX_SCRAPED_CHARS = int(os.getenv("MAX_SCRAPED_CHARS", "3500"))
+MAX_SCRAPED_CHARS = int(os.getenv("MAX_SCRAPED_CHARS", "5000"))
 
 
 def _require_env(name: str) -> str:

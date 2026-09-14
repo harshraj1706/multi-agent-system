@@ -2,7 +2,7 @@ import streamlit as st
 import json
 
 # Page Configuration
-st.set_page_config(page_title="Agentic Research AI", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="CogniSynth | Autonomous Research Intelligence", layout="wide", initial_sidebar_state="collapsed")
 
 # Premium Dark Theme CSS Injection
 st.markdown("""
@@ -34,8 +34,8 @@ def update_agent_card(placeholder, name, role, state, color):
     placeholder.markdown(html, unsafe_allow_html=True)
 
 # UI: Hero Section
-st.markdown("<div class='hero-title'>Production-grade AI Research Platform</div>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; color: #9f9fa9;'>Deploy a coordinated swarm of agents to discover sources, scrape the web, and synthesize publishable reports in real time.</p>", unsafe_allow_html=True)
+st.markdown("<div class='hero-title'>CogniSynth Autonomous Research Platform</div>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: #9f9fa9;'>Deploy an autonomous multi-agent swarm to discover sources, scrape the live web, and synthesize comprehensive research reports with QA verification in real time.</p>", unsafe_allow_html=True)
 
 search_col, btn_col = st.columns([5, 1])
 with search_col:
@@ -145,6 +145,10 @@ if run_btn and topic:
                 elif event_type == "complete":
                     progress_bar.progress(100)
                     report_ph.markdown(data['report'])
+
+                # 5. Render Errors Gracefully
+                elif event_type == "error":
+                    st.error(f"Research pipeline error: {data.get('message', 'Unknown error')}")
                     
             except (json.JSONDecodeError, KeyError, TypeError):
                 pass

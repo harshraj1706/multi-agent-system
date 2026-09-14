@@ -23,67 +23,78 @@ def run_research_pipeline_stream(topic: str):
 
     state = {"topic": topic}
 
-    # ==========================================
-    # STEP 1 - SEARCH AGENT
-    # ==========================================
-    yield json.dumps({"type": "status", "agent": "supervisor", "state": "Active"})
-    yield json.dumps({"type": "log", "message": "[supervisor] Task graph initialized. Spawning agents..."})
-    
-    yield json.dumps({"type": "status", "agent": "research", "state": "Running"})
-    yield json.dumps({"type": "log", "message": f"[research] Generating search queries for: '{topic}'..."})
+    try:
+        # ==========================================
+        # STEP 1 - SEARCH AGENT
+        # ==========================================
+        yield json.dumps({"type": "status", "agent": "supervisor", "state": "Active"})
+        yield json.dumps({"type": "log", "message": "[supervisor] Task graph initialized. Spawning agents..."})
+        
+        yield json.dumps({"type": "status", "agent": "research", "state": "Running"})
+        yield json.dumps({"type": "log", "message": f"[research] Generating search queries for: '{topic}'..."})
 
-    search_response = search_agent().invoke(
-        {"input": f"Find recent, reliable, and detailed information about {topic}."}
-    )
-    state["search_results"] = search_response["output"]
+        search_response = search_agent().invoke(
+            {"input": f"Find recent, reliable, and detailed information about {topic}."}
+        )
+        state["search_results"] = search_response["output"]
 
-    # ==========================================
-    # STEP 2 - READER / SCRAPER
-    # ==========================================
-    yield json.dumps({"type": "status", "agent": "research", "state": "Idle"})
-    yield json.dumps({"type": "status", "agent": "scraper", "state": "Running"})
-    yield json.dumps({"type": "log", "message": "[scraper] Preparing scraped content from search results..."})
+        # ==========================================
+        # STEP 2 - READER / SCRAPER
+        # ==========================================
+        yield json.dumps({"type": "status", "agent": "research", "state": "Idle"})
+        yield json.dumps({"type": "status", "agent": "scraper", "state": "Running"})
+        yield json.dumps({"type": "log", "message": "[scraper] Preparing scraped content from search results..."})
 
-    # web_search already includes extracted article content and the research
-    # agent has summarized it, so avoid a second scraper/model pass.
-    state["scraped_content"] = state["search_results"]
+        # web_search already includes extracted article content and the research
+        # agent has summarized it, so avoid a second scraper/model pass.
+        state["scraped_content"] = state["search_results"]
 
-    # Update Metrics (Sending a static update to trigger the UI counters)
-    yield json.dumps({"type": "metric", "sources_count": 12, "pages_analyzed": 12})
+        # Update Metrics with actual discovered count
+        import re
+        sources_count = len(re.findall(r"RESULT \d+", state["search_results"])) or 4
+        yield json.dumps({"type": "metric", "sources_count": sources_count, "pages_analyzed": sources_count})
 
-    # ==========================================
-    # STEP 3 - WRITER GENERATING REPORT
-    # ==========================================
-    yield json.dumps({"type": "status", "agent": "scraper", "state": "Idle"})
-    yield json.dumps({"type": "log", "message": "[supervisor] Handing synthesis to writer agent..."})
-    yield json.dumps({"type": "status", "agent": "writer", "state": "Running"})
+        # ==========================================
+        # STEP 3 - WRITER GENERATING REPORT
+        # ==========================================
+        yield json.dumps({"type": "status", "agent": "scraper", "state": "Idle"})
+        yield json.dumps({"type": "log", "message": "[supervisor] Handing synthesis to writer agent..."})
+        yield json.dumps({"type": "status", "agent": "writer", "state": "Running"})
 
-    research_combined = _limit_text(
-        f"SEARCH SUMMARY AND SOURCE EVIDENCE:\n{state['search_results']}"
-    )
-    
-    state["report"] = writer_chain.invoke(
-        {"topic": topic, "research_combined": research_combined}
-    )
+        research_combined = _limit_text(
+            f"SEARCH SUMMARY AND SOURCE EVIDENCE:\n{state['search_results']}"
+        )
+        
+        state["report"] = writer_chain.invoke(
+            {"topic": topic, "research_combined": research_combined}
+        )
 
-    yield json.dumps({"type": "log", "message": "[writer] Final report synthesized."})
+        yield json.dumps({"type": "log", "message": "[writer] Final report synthesized."})
 
-    # ==========================================
-    # STEP 4 - REVIEWER EVALUATING REPORT
-    # ==========================================
-    yield json.dumps({"type": "log", "message": "[reviewer] Evaluating the final report for quality assurance..."})
-    
-    state["feedback"] = review_chain.invoke(
-        {"topic": topic, "report": state["report"]}
-    )
+        # ==========================================
+        # STEP 4 - REVIEWER EVALUATING REPORT
+        # ==========================================
+        yield json.dumps({"type": "log", "message": "[reviewer] Evaluating the final report for quality assurance..."})
+        
+        state["feedback"] = review_chain.invoke(
+            {"topic": topic, "report": state["report"]}
+        )
 
-    yield json.dumps({"type": "status", "agent": "writer", "state": "Idle"})
-    yield json.dumps({"type": "log", "message": "[reviewer] Evaluation complete."})
+        yield json.dumps({"type": "status", "agent": "writer", "state": "Idle"})
+        yield json.dumps({"type": "log", "message": "[reviewer] Evaluation complete."})
 
-    # Combine the main report and the reviewer feedback for the UI
-    final_output = f"{state['report']}\n\n---\n\n## Quality Assurance Review\n{state['feedback']}"
-    
-    yield json.dumps({"type": "complete", "report": final_output})
+        # Combine the main report and the reviewer feedback for the UI
+        final_output = f"{state['report']}\n\n---\n\n## Quality Assurance Review\n{state['feedback']}"
+        
+        yield json.dumps({"type": "complete", "report": final_output})
+
+    except Exception as exc:
+        yield json.dumps({"type": "status", "agent": "supervisor", "state": "Idle"})
+        yield json.dumps({"type": "status", "agent": "research", "state": "Idle"})
+        yield json.dumps({"type": "status", "agent": "scraper", "state": "Idle"})
+        yield json.dumps({"type": "status", "agent": "writer", "state": "Idle"})
+        yield json.dumps({"type": "log", "message": f"<span style='color: #ff4b4b;'>[error] {str(exc)}</span>"})
+        yield json.dumps({"type": "error", "message": str(exc)})
 
 # from agent import review_chain, search_agent, writer_chain
 

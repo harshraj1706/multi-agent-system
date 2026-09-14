@@ -9,11 +9,32 @@ git add .
 git commit -m "feat: integrated FastAPI backend with real-time Streamlit UI for agent execution"
 git push
 
-limitation
+limitation / configuration
 
-GROQ_API_KEY=your_groq_key
-GROQ_MODEL=llama-3.3-70b-versatile
-GROQ_TEMPERATURE=0.2
-GROQ_MAX_TOKENS=1800
-MAX_SCRAPED_CHARS=3500
-MAX_RESEARCH_CONTEXT_CHARS=16000
+LLM_PROVIDER=gemini
+LLM_MODEL=gemini-3.8-flash
+LLM_FALLBACK_MODEL=gemini-3.6-flash
+LLM_TEMPERATURE=0.2
+LLM_MAX_TOKENS=4000
+MAX_SCRAPED_CHARS=5000
+MAX_RESEARCH_CONTEXT_CHARS=30000
+TAVILY_MAX_RESULTS=4
+
+# Previous Groq config (archived):
+# GROQ_API_KEY=your_groq_key
+# GROQ_MODEL=llama-3.3-70b-versatile
+# GROQ_MODEL=qwen/qwen3-32b
+
+
+# problem I faced
+recursion limit 
+the agent keep taking internal steps and did not finish quickly enough
+User asks research question
+LLM thinks
+Tool call: web_search
+Tool returns results
+LLM thinks again
+Maybe tool call again / tries to continue
+Limit reached
+Crash GraphRecursionError: Recursion limit of 5 reached without hitting a stop condition
+The text is too long for the model context window
