@@ -1,0 +1,16 @@
+{
+  "benchmark_targets": {
+    "min_citation_accuracy": 0.85,
+    "min_claim_grounding": 0.80,
+    "min_source_recall": 0.75,
+    "max_unsupported_claim_rate": 0.15,
+    "max_acceptable_latency_seconds": 60.0,
+    "max_estimated_cost_usd": 0.05
+  },
+  "rubric": {
+    "citation_accuracy": "Percentage of citations in final report matching valid retrieved source URLs.",
+    "claim_grounding": "Percentage of extracted claims backed by non-empty evidence snippets.",
+    "source_recall": "Ratio of unique authoritative domains discovered relative to query targets.",
+    "unsupported_claim_rate": "Fraction of statements flagged unverified by the claim verifier."
+  }
+}

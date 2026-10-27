@@ -14,3 +14,4 @@ httpx
 fastapi
 uvicorn
 streamlit
+reportlab

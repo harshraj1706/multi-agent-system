@@ -1,0 +1,14 @@
+version: "3.8"
+
+services:
+  cognisynth:
+    build: .
+    container_name: cognisynth_platform
+    ports:
+      - "8000:8000"  # FastAPI SSE API
+      - "8501:8501"  # Streamlit Dashboard
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped

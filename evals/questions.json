@@ -1,0 +1,46 @@
+[
+  {
+    "case_id": "eval_01",
+    "query": "State of Quantum Computing Qubit Scalability and Error Correction",
+    "domain": "deep_tech",
+    "expected_entities": ["qubits", "error correction", "logical qubits", "fault tolerance"],
+    "key_questions": [
+      "What are current logical qubit milestones?",
+      "Which architectures lead physical qubit scaling?"
+    ],
+    "known_contradictions": ["Neutral atom vs superconducting scalability claims"]
+  },
+  {
+    "case_id": "eval_02",
+    "query": "Comparative Benchmarks of Open Source vs Proprietary LLM Architectures",
+    "domain": "artificial_intelligence",
+    "expected_entities": ["MMLU", "HumanEval", "Llama", "Gemini", "Claude", "GSM8K"],
+    "key_questions": [
+      "How do open-weights models compare on standard benchmarks?",
+      "What is the inference cost differential?"
+    ],
+    "known_contradictions": ["Disputed parameter efficiency and quantization degradation"]
+  },
+  {
+    "case_id": "eval_03",
+    "query": "Solid-State Battery Commercialization Timeline and Energy Density",
+    "domain": "energy_hardware",
+    "expected_entities": ["energy density", "Wh/kg", "anode", "electrolyte", "EV"],
+    "key_questions": [
+      "What is the realistic commercial production year?",
+      "What Wh/kg is currently proven in testing?"
+    ],
+    "known_contradictions": ["Conflicting commercialization roadmaps (2026 vs 2030+)"]
+  },
+  {
+    "case_id": "eval_04",
+    "query": "Autonomous Agent Swarm Consensus and Multi-Agent Orchestration Protocols",
+    "domain": "software_systems",
+    "expected_entities": ["consensus", "LangGraph", "DAG", "latency", "hallucination"],
+    "key_questions": [
+      "How do multi-agent systems handle divergent tool outputs?",
+      "What are the communication overhead tradeoffs?"
+    ],
+    "known_contradictions": ["Single agent vs multi-agent cost efficiency"]
+  }
+]
